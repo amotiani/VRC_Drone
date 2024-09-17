@@ -84,6 +84,7 @@ public class droneMove : UdonSharpBehaviour
             ResetPosition();
         }
     }
+
     void VRControls(){
 
             if (Input.GetButton("Oculus_CrossPlatform_SecondaryThumbstick") || Input.GetKeyDown(KeyCode.T))
