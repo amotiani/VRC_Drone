@@ -84,57 +84,6 @@ public class droneMove : UdonSharpBehaviour
             ResetPosition();
         }
     }
-
-    void DesktopControls(){
-
-            if (Input.GetKey(KeyCode.A))
-            {
-                rigid.AddRelativeTorque(-Vector3.up * (yawSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
-            }
-            if (Input.GetKey(KeyCode.D))
-            {
-                rigid.AddRelativeTorque(Vector3.up * (yawSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
-            }
-            if (Input.GetKey(KeyCode.W))
-            {
-                if (!resultantDirection)
-                {
-                    rigid.AddRelativeForce(Vector3.up * moveSpeed, ForceMode.Impulse);
-                }
-                else
-                {
-                    rigid.AddRelativeForce(directionVector * (moveSpeed / 2), ForceMode.Impulse);
-                }
-            }
-            if (Input.GetKey(KeyCode.S))
-            {
-                if (!resultantDirection)
-                {
-                    rigid.AddRelativeForce(-Vector3.up * moveSpeed, ForceMode.Impulse);
-                }
-                else
-                {
-                    rigid.AddRelativeForce(-directionVector * (moveSpeed / 2), ForceMode.Impulse);
-                }
-            }
-            if (Input.GetKey(KeyCode.UpArrow))
-            {
-                rigid.AddRelativeTorque(Vector3.right * (rotateSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
-            }
-            if (Input.GetKey(KeyCode.DownArrow))
-            {
-                rigid.AddRelativeTorque(-Vector3.right * (rotateSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
-            }
-            if (Input.GetKey(KeyCode.LeftArrow))
-            {
-                rigid.AddRelativeTorque(Vector3.forward * (rotateSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
-            }
-            if (Input.GetKey(KeyCode.RightArrow))
-            {
-                rigid.AddRelativeTorque(-Vector3.forward * (rotateSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
-            }
-    }
-
     void VRControls(){
 
             if (Input.GetButton("Oculus_CrossPlatform_SecondaryThumbstick") || Input.GetKeyDown(KeyCode.T))
@@ -192,8 +141,6 @@ public class droneMove : UdonSharpBehaviour
         if(seated){
             //VR Controls
             VRControls();    
-            /* DESKTOP CONTROLS */
-            DesktopControls();   
         }
     }
 
