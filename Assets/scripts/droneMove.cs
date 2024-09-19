@@ -42,47 +42,89 @@ public class droneMove : UdonSharpBehaviour
         rigid.velocity = Vector3.zero;
         rigid.angularVelocity = Vector3.zero;
     }
+    //Function to convert euler angles from 0,360 scale to -180,180 scale. This allows for checking -ve degree rotations.
+    private float NormalizeAngle(float angle){
+        if(angle>180f){
+            angle-=360f;
+        }
+        return angle;
+    }
     void HandleRotations(){
 
-        float angleX = transform.rotation.eulerAngles.x;
-        float angleY = transform.rotation.eulerAngles.y;
-        float angleZ = transform.rotation.eulerAngles.z;
+        float angleX = NormalizeAngle(transform.rotation.eulerAngles.x);
+        float angleY = NormalizeAngle(transform.rotation.eulerAngles.y);
+        float angleZ = NormalizeAngle(transform.rotation.eulerAngles.z);
 
         Physics.gravity = new Vector3(0,-g_slide.value,0);
 
-        if (Mathf.Abs(angleY) <= 7f && Mathf.Abs(angleY) >= -7f && Mathf.Abs(angleZ)<= 7f && Mathf.Abs(angleY) >= -7f && Mathf.Abs(angleX) <= 7f && Mathf.Abs(angleX) >= -7f)
+        if (angleZ< 7f && angleZ > -7f && angleX < 7f && angleX > -7f)
         {
             //Debug.Log("up");
             resultantDirection=false;
         }
-        else if (Mathf.Abs(angleX) >= 7f && Mathf.Abs(angleX) <= 88f) 
+        else if (angleX > 7f && angleX < 88f)
         {
             //Debug.Log("fwd");
             directionVector = directionVectorFwd;
             resultantDirection = true;
         }
-        else if (Mathf.Abs(angleX) <= 353f && Mathf.Abs(angleX) >= 272f)
+        else if (angleX < 7f && angleX > 88f)
         {
             //Debug.Log("bwd");
             directionVector = directionVectorBwd;
             resultantDirection = true;
         }
-        else if (Mathf.Abs(angleZ) <= 353f && Mathf.Abs(angleZ) >= 272f)
+        else if (angleZ < 7f && angleZ > 88f)
         {
             //Debug.Log("right");
             directionVector = directionVectorRight;
             resultantDirection=false;
         }
-        else if (Mathf.Abs(angleZ) >= 7f && Mathf.Abs(angleZ) <= 80f)
+        else if (angleZ > 7f && angleZ < 88f)
         {
             //Debug.Log("left");
             directionVector = directionVectorLeft;
             resultantDirection=false;
         }
-        if (Input.GetButtonDown("Oculus_CrossPlatform_PrimaryThumbstick") || Input.GetKeyDown(KeyCode.R))
-        {
-            ResetPosition();
-        }
+    }
+
+    void DesktopControls(){
+
+            if (Input.GetKey(KeyCode.A))
+            {
+                rigid.AddRelativeTorque(-Vector3.up * (yawSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
+            }
+            if (Input.GetKey(KeyCode.D))
+            {
+                rigid.AddRelativeTorque(Vector3.up * (yawSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
+            }
+            if (Input.GetKey(KeyCode.W))
+            {
+                if (!resultantDirection)
+                {
+                    rigid.AddRelativeForce(Vector3.up * moveSpeed, ForceMode.Impulse);
+                }
+                else
+                {
+                    rigid.AddRelativeForce(directionVector * (moveSpeed / 2), ForceMode.Impulse);
+                }
+            }
+            if (Input.GetKey(KeyCode.UpArrow))
+            {
+                rigid.AddRelativeTorque(Vector3.right * (rotateSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
+            }
+            if (Input.GetKey(KeyCode.DownArrow))
+            {
+                rigid.AddRelativeTorque(-Vector3.right * (rotateSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
+            }
+            if (Input.GetKey(KeyCode.LeftArrow))
+            {
+                rigid.AddRelativeTorque(Vector3.forward * (rotateSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
+            }
+            if (Input.GetKey(KeyCode.RightArrow))
+            {
+                rigid.AddRelativeTorque(-Vector3.forward * (rotateSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
+            }
     }
 
     void VRControls(){
@@ -130,6 +172,12 @@ public class droneMove : UdonSharpBehaviour
         if(seated){
             HandleRotations();
         }
+
+        //Reset position of drone
+        if (Input.GetButtonDown("Oculus_CrossPlatform_PrimaryThumbstick") || Input.GetKeyDown(KeyCode.R))
+        {
+            ResetPosition();
+        }
     }
     private void FixedUpdate()
     {
@@ -142,6 +190,8 @@ public class droneMove : UdonSharpBehaviour
         if(seated){
             //VR Controls
             VRControls();    
+            /* DESKTOP CONTROLS */
+            DesktopControls();   
         }
     }
 

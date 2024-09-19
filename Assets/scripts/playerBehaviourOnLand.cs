@@ -13,7 +13,7 @@ public class playerBehaviourOnLand : UdonSharpBehaviour
 
     private void Update()
     {
-        if((Input.GetButtonDown("Fire2") || Input.GetButtonDown("Fire1") || Input.GetKeyDown(KeyCode.B)) && bike.GetComponent<droneMove>().seated == true)        //B on quest
+        if(Input.GetKeyDown(KeyCode.B) && bike.GetComponent<droneMove>().seated == true)        //B on quest
         {
             c1.enabled=!c1.enabled;
             c2.enabled= !c2.enabled;

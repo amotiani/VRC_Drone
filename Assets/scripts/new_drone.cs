@@ -67,6 +67,15 @@ public class new_drone : UdonSharpBehaviour
         rigid.drag = d_slide.value;
         rigid.angularDrag = ad_slide.value;
         rigid.mass = m_slide.value;
+        //Reset position of drone.
+        if (Input.GetButtonDown("Oculus_CrossPlatform_PrimaryThumbstick") || Input.GetKeyDown(KeyCode.R))
+        {
+            transform.position = position;
+            transform.rotation = rotation;
+            rigid.velocity = Vector3.zero;
+            rigid.angularVelocity = Vector3.zero;
+        }
+
         //Handle Rotations
         if(seated){
             HandleRotations();
@@ -82,52 +91,58 @@ public class new_drone : UdonSharpBehaviour
 
         if(seated){
         //VR Controls
-        VRControls();    
-        /* DESKTOP CONTROLS */
-        DesktopControls();   
+        VRControls();
+        //DESKTOP CONTROLS
+        DesktopControls();
         }
     }
+
+    //Function to convert euler angles from 0,360 scale to -180,180 scale. This allows for checking -ve degree rotations.
+    private float NormalizeAngle(float angle){
+        if(angle>180f){
+            angle-=360f;
+        }
+        return angle;
+    }
     void HandleRotations(){
-        if (transform.rotation.eulerAngles.y <= 7f && transform.rotation.eulerAngles.y >= -7f && transform.rotation.eulerAngles.z<= 7f && transform.rotation.eulerAngles.y >= -7f && transform.rotation.eulerAngles.x <= 7f && transform.rotation.eulerAngles.x >= -7f)
+
+        float angleX = NormalizeAngle(transform.rotation.eulerAngles.x);
+        float angleY = NormalizeAngle(transform.rotation.eulerAngles.y);
+        float angleZ = NormalizeAngle(transform.rotation.eulerAngles.z);
+
+            if (angleZ< 7f && angleZ > -7f && angleX < 7f && angleX > -7f)
             {
-                //Debug.Log("up");
+                Debug.Log("up");
                 rigid.AddRelativeForce(Vector3.up * droneIdleSpeed);
                 resultantDirection=false;
             }
-            else if ((transform.rotation.eulerAngles.x >= 7f && transform.rotation.eulerAngles.x <= 88f)) 
+            else if (angleX > 7f && angleX < 88f)
             {
                 //Debug.Log("fwd");
                 directionVector = directionVectorFwd;
                 resultantDirection = true;
                 rigid.AddRelativeForce(Vector3.forward * droneIdleSpeed);
             }
-            else if ((transform.rotation.eulerAngles.x <= 353f && transform.rotation.eulerAngles.x >= 272f)) 
+            else if (angleX < 7f && angleX > 88f)
             {
                 //Debug.Log("bwd");
                 directionVector = directionVectorBwd;
                 resultantDirection = true;
                 rigid.AddRelativeForce(-Vector3.forward * droneIdleSpeed);
             }
-            else if ((transform.rotation.eulerAngles.z <= 353f && transform.rotation.eulerAngles.z >= 272f)) 
+            else if (angleZ < 7f && angleZ > 88f)
             {
                 //Debug.Log("right");
                 directionVector = directionVectorRight;
                 resultantDirection=false;
                 rigid.AddRelativeForce(Vector3.right * droneIdleSpeed);
             }
-            else if ((transform.rotation.eulerAngles.z >= 7f && transform.rotation.eulerAngles.z <= 80f)) 
+            else if (angleZ > 7f && angleZ < 88f)
             {
                 //Debug.Log("left");
                 directionVector = directionVectorLeft;
                 resultantDirection=false;
                 rigid.AddRelativeForce(-Vector3.right * droneIdleSpeed);
-            }
-            if (Input.GetButtonDown("Oculus_CrossPlatform_PrimaryThumbstick") || Input.GetKeyDown(KeyCode.R))
-            {
-                transform.position = position;
-                transform.rotation = rotation;
-                rigid.velocity = Vector3.zero;
-                rigid.angularVelocity = Vector3.zero;
             }
     }
     void DesktopControls(){
@@ -148,17 +163,6 @@ public class new_drone : UdonSharpBehaviour
                 else
                 {
                     rigid.AddRelativeForce(directionVector * (moveSpeed / 2), ForceMode.Impulse);
-                }
-            }
-            if (Input.GetKey(KeyCode.S))
-            {
-                if (!resultantDirection)
-                {
-                    rigid.AddRelativeForce(-Vector3.up * moveSpeed, ForceMode.Impulse);
-                }
-                else
-                {
-                    rigid.AddRelativeForce(-directionVector * (moveSpeed / 2), ForceMode.Impulse);
                 }
             }
             if (Input.GetKey(KeyCode.UpArrow))
