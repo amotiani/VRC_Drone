@@ -13,8 +13,9 @@ public class playerBehaviourOnLand : UdonSharpBehaviour
 
     private void Update()
     {
-        if(Input.GetKeyDown(KeyCode.B) && bike.GetComponent<droneMove>().seated == true)        //B on quest
+        if(Input.GetKeyDown(KeyCode.X) && bike.GetComponent<droneMove>().seated == true)
         {
+            Debug.Log("Camera Switch");
             c1.enabled=!c1.enabled;
             c2.enabled= !c2.enabled;
         }

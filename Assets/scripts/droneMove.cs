@@ -10,7 +10,7 @@ public class droneMove : UdonSharpBehaviour
     public Rigidbody rigid;
     [SerializeField] public float rotateSpeed, moveSpeed, yawSpeed, fwdSpeed;
     public float ogRotateSpeed, ogMoveSpeed, ogYawSpeed, ogFwdSpeed, maxAngularVel = 2f;
-    public GameObject sliderr;
+    public GameObject sliderr, _seat;
     public bool seated=false;
     public VRCObjectSync obj;
     private bool grounded = true;
@@ -25,6 +25,7 @@ public class droneMove : UdonSharpBehaviour
 
     public void Start()
     {
+        gScale = Physics.gravity;
         seat.disableStationExit = true;
         mass = rigid.mass;
         drag = rigid.drag;
@@ -37,10 +38,10 @@ public class droneMove : UdonSharpBehaviour
     }
 
     void ResetPosition(){
-        transform.position = position;
-        transform.rotation = rotation;
         rigid.velocity = Vector3.zero;
         rigid.angularVelocity = Vector3.zero;
+        transform.position = position;
+        transform.rotation = rotation;
     }
     //Function to convert euler angles from 0,360 scale to -180,180 scale. This allows for checking -ve degree rotations.
     private float NormalizeAngle(float angle){
@@ -54,8 +55,6 @@ public class droneMove : UdonSharpBehaviour
         float angleX = NormalizeAngle(transform.rotation.eulerAngles.x);
         float angleY = NormalizeAngle(transform.rotation.eulerAngles.y);
         float angleZ = NormalizeAngle(transform.rotation.eulerAngles.z);
-
-        Physics.gravity = new Vector3(0,-g_slide.value,0);
 
         if (angleZ< 7f && angleZ > -7f && angleX < 7f && angleX > -7f)
         {
@@ -170,7 +169,12 @@ public class droneMove : UdonSharpBehaviour
         rigid.angularDrag = ad_slide.value;
         rigid.mass = m_slide.value;
         if(seated){
+            Physics.gravity = new Vector3(0,-g_slide.value,0);
+            _seat.GetComponent<BoxCollider>().enabled=false;
             HandleRotations();
+        }
+        else{
+            _seat.GetComponent<BoxCollider>().enabled=true;
         }
 
         //Reset position of drone

@@ -9,6 +9,7 @@ public class new_drone : UdonSharpBehaviour
 {
     VRCPlayerApi playerApi;
     public Rigidbody rigid;
+    [SerializeField] private GameObject _seat;
     [SerializeField] public float rotateSpeed;
     [SerializeField] public float moveSpeed;
     [SerializeField] public float droneIdleSpeed;
@@ -70,15 +71,19 @@ public class new_drone : UdonSharpBehaviour
         //Reset position of drone.
         if (Input.GetButtonDown("Oculus_CrossPlatform_PrimaryThumbstick") || Input.GetKeyDown(KeyCode.R))
         {
-            transform.position = position;
-            transform.rotation = rotation;
             rigid.velocity = Vector3.zero;
             rigid.angularVelocity = Vector3.zero;
+            transform.position = position;
+            transform.rotation = rotation;
         }
 
         //Handle Rotations
         if(seated){
+            _seat.SetActive(false);
             HandleRotations();
+        }
+        else{
+            _seat.SetActive(true);
         }
     }
     private void FixedUpdate()
