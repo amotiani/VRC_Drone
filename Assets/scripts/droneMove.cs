@@ -14,8 +14,8 @@ public class droneMove : UdonSharpBehaviour
     public bool seated=false;
     public VRCObjectSync obj;
     private bool grounded = true;
-    Quaternion rotation;
-    Vector3 position;
+    private Quaternion rotation;
+    private Vector3 position;
     public Slider m_slide, d_slide, ad_slide, t_slide, y_slide, r_slide, p_slide, n_slide, g_slide;
     public VRC.SDK3.Components.VRCStation seat;
     private Vector3 gScale, directionVectorFwd, directionVectorBwd, directionVectorRight, directionVectorLeft;
@@ -38,11 +38,10 @@ public class droneMove : UdonSharpBehaviour
     }
 
     void ResetPosition(){
-        rigid.velocity = Vector3.zero;
-        rigid.angularVelocity = Vector3.zero;
-        transform.position = position;
-        transform.rotation = rotation;
+        rigid.MovePosition(position);
+        rigid.MoveRotation(rotation);
     }
+
     //Function to convert euler angles from 0,360 scale to -180,180 scale. This allows for checking -ve degree rotations.
     private float NormalizeAngle(float angle){
         if(angle>180f){
@@ -195,7 +194,7 @@ public class droneMove : UdonSharpBehaviour
             //VR Controls
             VRControls();    
             /* DESKTOP CONTROLS */
-            DesktopControls();   
+            DesktopControls();
         }
     }
 

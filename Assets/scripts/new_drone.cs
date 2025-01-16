@@ -9,7 +9,6 @@ public class new_drone : UdonSharpBehaviour
 {
     VRCPlayerApi playerApi;
     public Rigidbody rigid;
-    [SerializeField] private GameObject _seat;
     [SerializeField] public float rotateSpeed;
     [SerializeField] public float moveSpeed;
     [SerializeField] public float droneIdleSpeed;
@@ -44,7 +43,6 @@ public class new_drone : UdonSharpBehaviour
     private Vector3 directionVectorRight;
     private Vector3 directionVectorLeft;
     [SerializeField]private float time;
-    public bool resultantDirection = true;
     float pitch;
     float throttle;
     float yaw;
@@ -63,95 +61,13 @@ public class new_drone : UdonSharpBehaviour
         directionVectorRight = transform.up + transform.right;
         directionVectorLeft = transform.up - transform.right;
     }
-    private void Update()
-    {
-        rigid.drag = d_slide.value;
-        rigid.angularDrag = ad_slide.value;
-        rigid.mass = m_slide.value;
-        //Reset position of drone.
-        if (Input.GetButtonDown("Oculus_CrossPlatform_PrimaryThumbstick") || Input.GetKeyDown(KeyCode.R))
-        {
-            rigid.velocity = Vector3.zero;
-            rigid.angularVelocity = Vector3.zero;
-            transform.position = position;
-            transform.rotation = rotation;
-        }
-
-        //Handle Rotations
-        if(seated){
-            _seat.SetActive(false);
-            HandleRotations();
-        }
-        else{
-            _seat.SetActive(true);
-        }
-    }
-    private void FixedUpdate()
-    {
-        pitch = Input.GetAxis("Oculus_CrossPlatform_SecondaryThumbstickVertical") * p_slide.value;
-        throttle = Input.GetAxis("Oculus_CrossPlatform_PrimaryThumbstickVertical") * t_slide.value;
-        yaw = Input.GetAxis("Oculus_CrossPlatform_PrimaryThumbstickHorizontal") * y_slide.value;
-        roll = Input.GetAxis("Oculus_CrossPlatform_SecondaryThumbstickHorizontal") * r_slide.value;
-        nitro = fwdSpeed * n_slide.value;
-
-        if(seated){
-        //VR Controls
-        VRControls();
-        //DESKTOP CONTROLS
-        DesktopControls();
-        }
+    void ResetPosition(){
+        rigid.MovePosition(position);
+        rigid.MoveRotation(rotation);
     }
 
-    //Function to convert euler angles from 0,360 scale to -180,180 scale. This allows for checking -ve degree rotations.
-    private float NormalizeAngle(float angle){
-        if(angle>180f){
-            angle-=360f;
-        }
-        return angle;
-    }
-    void HandleRotations(){
-
-        float angleX = NormalizeAngle(transform.rotation.eulerAngles.x);
-        float angleY = NormalizeAngle(transform.rotation.eulerAngles.y);
-        float angleZ = NormalizeAngle(transform.rotation.eulerAngles.z);
-
-            if (angleZ< 7f && angleZ > -7f && angleX < 7f && angleX > -7f)
-            {
-                Debug.Log("up");
-                rigid.AddRelativeForce(Vector3.up * droneIdleSpeed);
-                resultantDirection=false;
-            }
-            else if (angleX > 7f && angleX < 88f)
-            {
-                //Debug.Log("fwd");
-                directionVector = directionVectorFwd;
-                resultantDirection = true;
-                rigid.AddRelativeForce(Vector3.forward * droneIdleSpeed);
-            }
-            else if (angleX < 7f && angleX > 88f)
-            {
-                //Debug.Log("bwd");
-                directionVector = directionVectorBwd;
-                resultantDirection = true;
-                rigid.AddRelativeForce(-Vector3.forward * droneIdleSpeed);
-            }
-            else if (angleZ < 7f && angleZ > 88f)
-            {
-                //Debug.Log("right");
-                directionVector = directionVectorRight;
-                resultantDirection=false;
-                rigid.AddRelativeForce(Vector3.right * droneIdleSpeed);
-            }
-            else if (angleZ > 7f && angleZ < 88f)
-            {
-                //Debug.Log("left");
-                directionVector = directionVectorLeft;
-                resultantDirection=false;
-                rigid.AddRelativeForce(-Vector3.right * droneIdleSpeed);
-            }
-    }
     void DesktopControls(){
-        if (Input.GetKey(KeyCode.A))
+            if (Input.GetKey(KeyCode.A))
             {
                 rigid.AddRelativeTorque(-Vector3.up * (yawSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
             }
@@ -161,14 +77,12 @@ public class new_drone : UdonSharpBehaviour
             }
             if (Input.GetKey(KeyCode.W))
             {
-                if (!resultantDirection)
-                {
-                    rigid.AddRelativeForce(Vector3.up * moveSpeed, ForceMode.Impulse);
-                }
-                else
-                {
-                    rigid.AddRelativeForce(directionVector * (moveSpeed / 2), ForceMode.Impulse);
-                }
+                rigid.AddRelativeForce(Vector3.up * moveSpeed, ForceMode.Impulse);
+
+            }
+            if (Input.GetKey(KeyCode.S))
+            {
+                rigid.AddRelativeForce(-Vector3.up * moveSpeed, ForceMode.Impulse);
             }
             if (Input.GetKey(KeyCode.UpArrow))
             {
@@ -200,16 +114,8 @@ public class new_drone : UdonSharpBehaviour
 
             if (throttle >= 0)
             {
-                if (!resultantDirection)
-                {
                     rigid.AddRelativeForce(Vector3.up * throttle * moveSpeed, ForceMode.Impulse);
-                }
-                else
-                {
-                    rigid.AddRelativeForce(directionVector * throttle * (moveSpeed / 2), ForceMode.Impulse);
-                }
             }
-
             if (roll != 0)
             {
                 rigid.AddRelativeTorque(-Vector3.forward * (rotateSpeed / 2) * roll * Time.deltaTime, ForceMode.Impulse);
@@ -221,4 +127,32 @@ public class new_drone : UdonSharpBehaviour
             }
     }
 
+    private void Update()
+    {
+        Physics.gravity = new Vector3(0, -g_slide.value, 0);
+        rigid.drag = d_slide.value;
+        rigid.angularDrag = ad_slide.value;
+        rigid.mass = m_slide.value;
+        //Handle Reset
+        if (Input.GetButtonDown("Oculus_CrossPlatform_PrimaryThumbstick") || Input.GetKeyDown(KeyCode.R))
+        {
+            ResetPosition();
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        pitch = Input.GetAxis("Oculus_CrossPlatform_SecondaryThumbstickVertical") * p_slide.value;
+        throttle = Input.GetAxis("Oculus_CrossPlatform_PrimaryThumbstickVertical") * t_slide.value;
+        yaw = Input.GetAxis("Oculus_CrossPlatform_PrimaryThumbstickHorizontal") * y_slide.value;
+        roll = Input.GetAxis("Oculus_CrossPlatform_SecondaryThumbstickHorizontal") * r_slide.value;
+        nitro = fwdSpeed * n_slide.value;
+
+        if(seated){
+            //VR Controls
+            VRControls();
+            /* DESKTOP CONTROLS */
+            DesktopControls();
+        }
+    }
 }
