@@ -1,4 +1,4 @@
-﻿using UdonSharp;
+using UdonSharp;
 using UnityEngine;
 using UnityEngine.UI;
 using VRC.SDK3.Components;
@@ -7,14 +7,15 @@ using VRC.Udon;
 
 public class droneMove : UdonSharpBehaviour
 {
-    public Rigidbody rigid;
-    [SerializeField] public float rotateSpeed, moveSpeed, yawSpeed, fwdSpeed;
-    public float ogRotateSpeed, ogMoveSpeed, ogYawSpeed, ogFwdSpeed, maxAngularVel = 2f;
-    public GameObject sliderr, _seat;
-    public bool seated=false;
-    public VRCObjectSync obj;
-    private bool grounded = true;
-    private Quaternion rotation;
+    public Rigidbody rigid;     //Rigidbody of the drone (assigned in inspector)
+    private BoxCollider seatCollider;   //Seat collider of the drone seat
+
+    //Very weird naming: roll speed used for both pitch AND roll, moveSpeed used for thrust, yawspeed used for yaw & fwdSpeed used for forward movt.
+    [SerializeField] public float rollSpeed, moveSpeed, yawSpeed, fwdSpeed;
+    public float ogrollSpeed, ogMoveSpeed, ogYawSpeed, ogFwdSpeed;  //Original speeds (start values of these speeds).
+    public GameObject _seat;    //Drone Seat gameobject
+    public bool seated=false;      //Boolean check if player is seated
+    private Quaternion rotation;    //rotation variable is of a Quaternion type which stores rotations in Unity. A quaternion is a four-tuple of real numbers {x,y,z,w}
     private Vector3 position;
     public Slider m_slide, d_slide, ad_slide, t_slide, y_slide, r_slide, p_slide, n_slide, g_slide;
     public VRC.SDK3.Components.VRCStation seat;
@@ -35,6 +36,7 @@ public class droneMove : UdonSharpBehaviour
         directionVectorBwd = (transform.up - transform.forward).normalized;
         directionVectorRight = (transform.up + transform.right).normalized;
         directionVectorLeft = (transform.up - transform.right).normalized;
+        seatCollider = _seat.GetComponent<BoxCollider>();
     }
 
     void ResetPosition(){
@@ -109,19 +111,19 @@ public class droneMove : UdonSharpBehaviour
             }
             if (Input.GetKey(KeyCode.UpArrow))
             {
-                rigid.AddRelativeTorque(Vector3.right * (rotateSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
+                rigid.AddRelativeTorque(Vector3.right * (rollSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
             }
             if (Input.GetKey(KeyCode.DownArrow))
             {
-                rigid.AddRelativeTorque(-Vector3.right * (rotateSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
+                rigid.AddRelativeTorque(-Vector3.right * (rollSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
             }
             if (Input.GetKey(KeyCode.LeftArrow))
             {
-                rigid.AddRelativeTorque(Vector3.forward * (rotateSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
+                rigid.AddRelativeTorque(Vector3.forward * (rollSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
             }
             if (Input.GetKey(KeyCode.RightArrow))
             {
-                rigid.AddRelativeTorque(-Vector3.forward * (rotateSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
+                rigid.AddRelativeTorque(-Vector3.forward * (rollSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
             }
     }
 
@@ -137,7 +139,7 @@ public class droneMove : UdonSharpBehaviour
                 rigid.AddRelativeTorque(Vector3.up * (yawSpeed / 2) * yaw * Time.deltaTime, ForceMode.Impulse);
             }
 
-            if (throttle >= 0)
+            if (throttle > 0)
             {
                 if (!resultantDirection)
                 {
@@ -152,13 +154,14 @@ public class droneMove : UdonSharpBehaviour
             if (roll != 0)
             {
                 rigid.AddRelativeForce(-Vector3.forward * roll * Time.deltaTime * 10f, ForceMode.Impulse);
-                rigid.AddRelativeTorque(-Vector3.forward * (rotateSpeed / 2) * roll * Time.deltaTime, ForceMode.Impulse);
+                rigid.AddRelativeTorque(-Vector3.forward * (rollSpeed / 2) * roll * Time.deltaTime, ForceMode.Impulse);
+                Debug.Log("Rolling amount:"+rollSpeed);
             }
 
             if (pitch != 0)
             {
                 rigid.AddRelativeForce(Vector3.right * pitch * Time.deltaTime * 10f, ForceMode.Impulse);
-                rigid.AddRelativeTorque(Vector3.right * (rotateSpeed / 2) * pitch * Time.deltaTime, ForceMode.Impulse);
+                rigid.AddRelativeTorque(Vector3.right * (rollSpeed / 2) * pitch * Time.deltaTime, ForceMode.Impulse);
             }
     }
 
@@ -169,11 +172,11 @@ public class droneMove : UdonSharpBehaviour
         rigid.mass = m_slide.value;
         if(seated){
             Physics.gravity = new Vector3(0,-g_slide.value,0);
-            _seat.GetComponent<BoxCollider>().enabled=false;
+            seatCollider.enabled=false;
             HandleRotations();
         }
         else{
-            _seat.GetComponent<BoxCollider>().enabled=true;
+            seatCollider.enabled=true;
         }
 
         //Reset position of drone
