@@ -80,9 +80,8 @@ public class new_drone : UdonSharpBehaviour
         {
             rigid.AddRelativeForce(input_vertical_axis * Vector3.up * moveSpeed, ForceMode.Force);
         }
-
-        void VRControls()
-        {
+    }
+    void VRControls(){
             if (vrYaw != 0)
             {
                 rigid.AddRelativeTorque(Vector3.up * (yawSpeed / 2) * vrYaw, ForceMode.Force);
@@ -101,7 +100,6 @@ public class new_drone : UdonSharpBehaviour
             {
                 rigid.AddRelativeTorque(Vector3.right * (rotateSpeed / 2) * vrPitch, ForceMode.Force);
             }
-        }
     }
 
     private void Update()
