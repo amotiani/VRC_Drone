@@ -136,7 +136,7 @@ public class droneMove : UdonSharpBehaviour
 
             if (yaw != 0)
             {
-                rigid.AddRelativeTorque(Vector3.up * (yawSpeed / 2) * yaw * Time.deltaTime, ForceMode.Impulse);
+                rigid.AddRelativeTorque(Vector3.up * (yawSpeed / 2) * yaw * Time.fixedDeltaTime, ForceMode.Impulse);
             }
 
             if (throttle > 0)
@@ -153,15 +153,15 @@ public class droneMove : UdonSharpBehaviour
 
             if (roll != 0)
             {
-                rigid.AddRelativeForce(-Vector3.forward * roll * Time.deltaTime * 10f, ForceMode.Impulse);
-                rigid.AddRelativeTorque(-Vector3.forward * (rollSpeed / 2) * roll * Time.deltaTime, ForceMode.Impulse);
+                rigid.AddRelativeForce(-Vector3.forward * roll * Time.fixedDeltaTime * 10f, ForceMode.Impulse);
+                rigid.AddRelativeTorque(-Vector3.forward * (rollSpeed / 2) * roll * Time.fixedDeltaTime, ForceMode.Impulse);
                 Debug.Log("Rolling amount:"+rollSpeed);
             }
 
             if (pitch != 0)
             {
-                rigid.AddRelativeForce(Vector3.right * pitch * Time.deltaTime * 10f, ForceMode.Impulse);
-                rigid.AddRelativeTorque(Vector3.right * (rollSpeed / 2) * pitch * Time.deltaTime, ForceMode.Impulse);
+                rigid.AddRelativeForce(Vector3.right * pitch * Time.fixedDeltaTime * 10f, ForceMode.Impulse);
+                rigid.AddRelativeTorque(Vector3.right * (rollSpeed / 2) * pitch * Time.fixedDeltaTime, ForceMode.Impulse);
             }
     }
 
