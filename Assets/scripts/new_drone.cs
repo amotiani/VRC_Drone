@@ -1,132 +1,73 @@
 ﻿using UdonSharp;
 using UnityEngine;
-using UnityEngine.UI;
 using VRC.SDK3.Components;
-using VRC.SDKBase;
-using VRC.Udon;
 
-public class new_drone : UdonSharpBehaviour
-{
-    public Rigidbody rigid;
-    [SerializeField] public float rotateSpeed;
-    [SerializeField] public float moveSpeed;
-    [SerializeField] public float droneIdleSpeed;
-    [SerializeField] public float yawSpeed;
-    [SerializeField] public float fwdSpeed;
-    public float ogRotateSpeed;
-    public float ogMoveSpeed;
-    public float ogYawSpeed;
-    public float ogFwdSpeed;
-    public bool seated=false;
-    public VRCObjectSync obj;
-    public float maxAngularVel = 2f;
-    private float mass;
-    private float drag;
-    private bool grounded = true;
-    Quaternion rotation;
-    Vector3 position;
-    public Slider m_slide;
-    public Slider d_slide;
-    public Slider ad_slide;
-    public Slider t_slide;
-    public Slider y_slide;
-    public Slider r_slide;
-    public Slider p_slide;
-    public Slider n_slide;
-    public Slider g_slide;
-    public VRC.SDK3.Components.VRCStation seat;
-    private Vector3 gScale;
-    public Vector3 directionVector;
-    private Vector3 directionVectorFwd;
-    private Vector3 directionVectorBwd;
-    private Vector3 directionVectorRight;
-    private Vector3 directionVectorLeft;
-    [SerializeField]private float time;
+public class new_drone : base_drone
+{   
+    [Header("New Drone Specific")]
+    [SerializeField] public float stabilizationForce = 10f;
+    [SerializeField] public float my_upward_drag;
+    public bool stabilize;
 
-    //Input cache
-    private float input_horizontal_axis;
-    private float input_vertical_axis;
-    private float vrPitch;
-    private float vrThrottle;
-    private float vrYaw;
-    private float vrRoll;
-    private bool resetInput;
+    // Input state
+    private float inputDeadzone = 0.1f;
+    private bool isPiloting;
     
-    public void Start()
+    // 'override' adds to the parent's Start() method
+    public override void Start()
     {
-        seat.disableStationExit = true;
-        mass = rigid.mass;
-        drag = rigid.drag;
-        rotation = transform.rotation;
-        position = transform.position;
-        directionVectorFwd = transform.up + transform.forward;
-        directionVectorBwd = transform.up - transform.forward;
-        directionVectorRight = transform.up + transform.right;
-        directionVectorLeft = transform.up - transform.right;
-    }
-    void ResetPosition(){
-        rigid.MovePosition(position);
-        rigid.MoveRotation(rotation);
+        base.Start(); // This runs the Start() logic from BaseDroneController
+        rb.useGravity = false; // This is unique to new_drone
+        rb.drag = 0;
+        // The rest of the shared Start() logic is in the base class
     }
 
-    void DesktopControls(){
-            if (input_horizontal_axis != 0)
-            {
-                rigid.AddRelativeTorque(input_horizontal_axis * Vector3.up * (yawSpeed / 2), ForceMode.Force);
-            }
-            
-            if (input_vertical_axis != 0)
-            {
-                rigid.AddRelativeForce(input_vertical_axis * Vector3.up * moveSpeed, ForceMode.Force);
-    }
-    void VRControls(){
-            if (vrYaw != 0)
-            {
-                rigid.AddRelativeTorque(Vector3.up * (yawSpeed / 2) * vrYaw, ForceMode.Force);
-            }
-
-            if (vrThrottle >= 0)
-            {
-                rigid.AddRelativeForce(Vector3.up * vrThrottle * moveSpeed, ForceMode.Force);
-            }
-            if (vrRoll != 0)
-            {
-                rigid.AddRelativeTorque(-Vector3.forward * (rotateSpeed / 2) * vrRoll, ForceMode.Force);
-            }
-
-            if (vrPitch != 0)
-            {
-                rigid.AddRelativeTorque(Vector3.right * (rotateSpeed / 2) * vrPitch, ForceMode.Force);
-            }
-    }
-
-    private void Update()
+    // 'override' adds to the parent's Update() method
+    public override void Update()
     {
-        // Read all input in Update
-        input_horizontal_axis = Input.GetAxis("Horizontal");
-        input_vertical_axis = Input.GetAxis("Vertical");
-        
-        vrPitch = Input.GetAxis("Oculus_CrossPlatform_SecondaryThumbstickVertical") * p_slide.value;
-        vrThrottle = Input.GetAxis("Oculus_CrossPlatform_PrimaryThumbstickVertical") * t_slide.value;
-        vrYaw = Input.GetAxis("Oculus_CrossPlatform_PrimaryThumbstickHorizontal") * y_slide.value;
-        vrRoll = Input.GetAxis("Oculus_CrossPlatform_SecondaryThumbstickHorizontal") * r_slide.value;
-        resetInput = Input.GetButtonDown("Oculus_CrossPlatform_PrimaryThumbstick") || Input.GetKeyDown(KeyCode.R);
-        
-        //Handle Reset
-        if (resetInput)
-        {
-            ResetPosition();
-        }
+        base.Update(); // This runs all the input and slider logic from the base class
 
-        Physics.gravity = new Vector3(0, -g_slide.value, 0);
-        rigid.drag = d_slide.value;
-        rigid.angularDrag = ad_slide.value;
-        rigid.mass = m_slide.value;
+        // To check if input is given
+        isPiloting =
+            Mathf.Abs(vrPitch) > inputDeadzone ||
+            Mathf.Abs(vrRoll) > inputDeadzone ||
+            Mathf.Abs(vrYaw) > inputDeadzone ||
+            Mathf.Abs(desktopPitch) > inputDeadzone ||
+            Mathf.Abs(desktopRoll) > inputDeadzone ||
+            Mathf.Abs(desktopYaw) > inputDeadzone;
+    }
+
+    void Stabilizer()
+    {
+        Vector3 worldUp = Vector3.up;
+        Vector3 droneUp = transform.up;
+        float alignment = Vector3.Dot(worldUp, droneUp);
+        float error = Mathf.Clamp01(1.0f - alignment);
+        Vector3 stabilizationAxis = Vector3.Cross(droneUp, worldUp);
+        Vector3 alignForce = error * stabilizationAxis * stabilizationForce;
+        rb.AddTorque(alignForce, ForceMode.Acceleration);
     }
 
     private void FixedUpdate()
     {
         if(seated){
+            rb.AddForce(Vector3.down * gScale.magnitude, ForceMode.Acceleration);
+
+            // Use the input variables from the base class
+            bool isThrusting = (vrThrottle > 0) || (desktopThrottle != 0);
+
+            if (!isThrusting && rb.velocity.y > 0)
+            {
+                Vector3 upwardBrakeForce = Vector3.down * rb.velocity.y * my_upward_drag;
+                rb.AddForce(upwardBrakeForce, ForceMode.Acceleration);
+            }
+
+            if(!isPiloting && stabilize)
+            {
+                Stabilizer();
+            }
+
+            // Call the control methods from the base class
             if (vrPitch != 0 || vrThrottle != 0 || vrYaw != 0 || vrRoll != 0)
             {
                 VRControls();
