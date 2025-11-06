@@ -1,7 +1,6 @@
 ﻿using UdonSharp;
 using UnityEngine;
 
-// Notice it inherits from our new base class
 public class droneMove : base_drone
 {
     [Header("DroneV1 Specific")]
@@ -12,7 +11,7 @@ public class droneMove : base_drone
     // 'override' adds to the parent's Start() method
     public override void Start()
     {
-        base.Start(); // This runs the Start() logic from BaseDroneController
+        base.Start(); // This runs the Start() logic from base_drone
         
         // This logic is unique to droneMove
         seatCollider = _seat.GetComponent<BoxCollider>();
@@ -23,7 +22,6 @@ public class droneMove : base_drone
     {
         base.Update(); // This runs all the input, slider, and reset logic
         
-        // This logic is unique to droneMove
         if(seated){
             seatCollider.enabled=false;
         }
@@ -32,13 +30,12 @@ public class droneMove : base_drone
         }
     }
 
-    // This FixedUpdate is unique to droneMove
     private void FixedUpdate()
     {
         if(seated){
             rb.AddForce(Vector3.down * gScale.magnitude, ForceMode.Acceleration);
 
-            // Use the input variables from the base class (desktopThrottle)
+            // Input variables from the base class (desktopThrottle)
             bool isThrusting = (vrThrottle > 0) || (desktopThrottle != 0);
 
             if(!isThrusting && rb.velocity.y > 0)
@@ -47,7 +44,6 @@ public class droneMove : base_drone
                 rb.AddForce(downwardDrag, ForceMode.Acceleration);
             }
 
-            // Call the control methods from the base class
             if (vrPitch != 0 || vrThrottle != 0 || vrYaw != 0 || vrRoll != 0)
             {
                 VRControls();
