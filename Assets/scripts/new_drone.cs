@@ -7,7 +7,6 @@ using VRC.Udon;
 
 public class new_drone : UdonSharpBehaviour
 {
-    VRCPlayerApi playerApi;
     public Rigidbody rigid;
     [SerializeField] public float rotateSpeed;
     [SerializeField] public float moveSpeed;
@@ -43,11 +42,15 @@ public class new_drone : UdonSharpBehaviour
     private Vector3 directionVectorRight;
     private Vector3 directionVectorLeft;
     [SerializeField]private float time;
-    float pitch;
-    float throttle;
-    float yaw;
-    float roll;
-    float nitro;
+
+    //Input cache
+    private float input_horizontal_axis;
+    private float input_vertical_axis;
+    private float vrPitch;
+    private float vrThrottle;
+    private float vrYaw;
+    private float vrRoll;
+    private bool resetInput;
     
     public void Start()
     {
@@ -67,92 +70,71 @@ public class new_drone : UdonSharpBehaviour
     }
 
     void DesktopControls(){
-            if (Input.GetKey(KeyCode.A))
+            if (input_horizontal_axis != 0)
             {
-                rigid.AddRelativeTorque(-Vector3.up * (yawSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
+                rigid.AddRelativeTorque(input_horizontal_axis * Vector3.up * (yawSpeed / 2), ForceMode.Force);
             }
-            if (Input.GetKey(KeyCode.D))
+            
+            if (input_vertical_axis != 0)
             {
-                rigid.AddRelativeTorque(Vector3.up * (yawSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
-            }
-            if (Input.GetKey(KeyCode.W))
-            {
-                rigid.AddRelativeForce(Vector3.up * moveSpeed, ForceMode.Impulse);
-
-            }
-            if (Input.GetKey(KeyCode.S))
-            {
-                rigid.AddRelativeForce(-Vector3.up * moveSpeed, ForceMode.Impulse);
-            }
-            if (Input.GetKey(KeyCode.UpArrow))
-            {
-                rigid.AddRelativeTorque(Vector3.right * (rotateSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
-            }
-            if (Input.GetKey(KeyCode.DownArrow))
-            {
-                rigid.AddRelativeTorque(-Vector3.right * (rotateSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
-            }
-            if (Input.GetKey(KeyCode.LeftArrow))
-            {
-                rigid.AddRelativeTorque(Vector3.forward * (rotateSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
-            }
-            if (Input.GetKey(KeyCode.RightArrow))
-            {
-                rigid.AddRelativeTorque(-Vector3.forward * (rotateSpeed / 2) * Time.fixedDeltaTime, ForceMode.Impulse);
-            }
+                rigid.AddRelativeForce(input_vertical_axis * Vector3.up * moveSpeed, ForceMode.Force);
     }
     void VRControls(){
-        if (Input.GetButton("Oculus_CrossPlatform_SecondaryThumbstick") || Input.GetKeyDown(KeyCode.T))
+            if (vrYaw != 0)
             {
-                rigid.AddRelativeForce(Vector3.forward * moveSpeed * 5f, ForceMode.Impulse);
+                rigid.AddRelativeTorque(Vector3.up * (yawSpeed / 2) * vrYaw, ForceMode.Force);
             }
 
-            if (yaw != 0)
+            if (vrThrottle >= 0)
             {
-                rigid.AddRelativeTorque(Vector3.up * (yawSpeed / 2) * yaw * Time.fixedDeltaTime, ForceMode.Impulse);
+                rigid.AddRelativeForce(Vector3.up * vrThrottle * moveSpeed, ForceMode.Force);
+            }
+            if (vrRoll != 0)
+            {
+                rigid.AddRelativeTorque(-Vector3.forward * (rotateSpeed / 2) * vrRoll, ForceMode.Force);
             }
 
-            if (throttle >= 0)
+            if (vrPitch != 0)
             {
-                    rigid.AddRelativeForce(Vector3.up * throttle * moveSpeed, ForceMode.Impulse);
-            }
-            if (roll != 0)
-            {
-                rigid.AddRelativeTorque(-Vector3.forward * (rotateSpeed / 2) * roll * Time.fixedDeltaTime, ForceMode.Impulse);
-            }
-
-            if (pitch != 0)
-            {
-                rigid.AddRelativeTorque(Vector3.right * (rotateSpeed / 2) * pitch * Time.fixedDeltaTime, ForceMode.Impulse);
+                rigid.AddRelativeTorque(Vector3.right * (rotateSpeed / 2) * vrPitch, ForceMode.Force);
             }
     }
 
     private void Update()
     {
+        // Read all input in Update
+        input_horizontal_axis = Input.GetAxis("Horizontal");
+        input_vertical_axis = Input.GetAxis("Vertical");
+        
+        vrPitch = Input.GetAxis("Oculus_CrossPlatform_SecondaryThumbstickVertical") * p_slide.value;
+        vrThrottle = Input.GetAxis("Oculus_CrossPlatform_PrimaryThumbstickVertical") * t_slide.value;
+        vrYaw = Input.GetAxis("Oculus_CrossPlatform_PrimaryThumbstickHorizontal") * y_slide.value;
+        vrRoll = Input.GetAxis("Oculus_CrossPlatform_SecondaryThumbstickHorizontal") * r_slide.value;
+        resetInput = Input.GetButtonDown("Oculus_CrossPlatform_PrimaryThumbstick") || Input.GetKeyDown(KeyCode.R);
+        
+        //Handle Reset
+        if (resetInput)
+        {
+            ResetPosition();
+        }
+
         Physics.gravity = new Vector3(0, -g_slide.value, 0);
         rigid.drag = d_slide.value;
         rigid.angularDrag = ad_slide.value;
         rigid.mass = m_slide.value;
-        //Handle Reset
-        if (Input.GetButtonDown("Oculus_CrossPlatform_PrimaryThumbstick") || Input.GetKeyDown(KeyCode.R))
-        {
-            ResetPosition();
-        }
     }
 
     private void FixedUpdate()
     {
-        pitch = Input.GetAxis("Oculus_CrossPlatform_SecondaryThumbstickVertical") * p_slide.value;
-        throttle = Input.GetAxis("Oculus_CrossPlatform_PrimaryThumbstickVertical") * t_slide.value;
-        yaw = Input.GetAxis("Oculus_CrossPlatform_PrimaryThumbstickHorizontal") * y_slide.value;
-        roll = Input.GetAxis("Oculus_CrossPlatform_SecondaryThumbstickHorizontal") * r_slide.value;
-        nitro = fwdSpeed * n_slide.value;
-
         if(seated){
-            //VR Controls
-            VRControls();
-            /* DESKTOP CONTROLS */
-            DesktopControls();
+            if (vrPitch != 0 || vrThrottle != 0 || vrYaw != 0 || vrRoll != 0)
+            {
+                VRControls();
+            }
+            else
+            {
+                DesktopControls();
+            }
         }
     }
 }
