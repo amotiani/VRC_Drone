@@ -1,4 +1,4 @@
-﻿using UdonSharp;
+using UdonSharp;
 using UnityEngine;
 using UnityEngine.UI;
 using VRC.SDK3.Components;
@@ -69,17 +69,20 @@ public class new_drone : UdonSharpBehaviour
         rigid.MoveRotation(rotation);
     }
 
-    void DesktopControls(){
-            if (input_horizontal_axis != 0)
-            {
-                rigid.AddRelativeTorque(input_horizontal_axis * Vector3.up * (yawSpeed / 2), ForceMode.Force);
-            }
-            
-            if (input_vertical_axis != 0)
-            {
-                rigid.AddRelativeForce(input_vertical_axis * Vector3.up * moveSpeed, ForceMode.Force);
-    }
-    void VRControls(){
+    void DesktopControls()
+    {
+        if (input_horizontal_axis != 0)
+        {
+            rigid.AddRelativeTorque(input_horizontal_axis * Vector3.up * (yawSpeed / 2), ForceMode.Force);
+        }
+
+        if (input_vertical_axis != 0)
+        {
+            rigid.AddRelativeForce(input_vertical_axis * Vector3.up * moveSpeed, ForceMode.Force);
+        }
+
+        void VRControls()
+        {
             if (vrYaw != 0)
             {
                 rigid.AddRelativeTorque(Vector3.up * (yawSpeed / 2) * vrYaw, ForceMode.Force);
@@ -98,6 +101,7 @@ public class new_drone : UdonSharpBehaviour
             {
                 rigid.AddRelativeTorque(Vector3.right * (rotateSpeed / 2) * vrPitch, ForceMode.Force);
             }
+        }
     }
 
     private void Update()
