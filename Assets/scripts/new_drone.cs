@@ -109,7 +109,7 @@ public class new_drone : UdonSharpBehaviour
 
             if (yaw != 0)
             {
-                rigid.AddRelativeTorque(Vector3.up * (yawSpeed / 2) * yaw * Time.deltaTime, ForceMode.Impulse);
+                rigid.AddRelativeTorque(Vector3.up * (yawSpeed / 2) * yaw * Time.fixedDeltaTime, ForceMode.Impulse);
             }
 
             if (throttle >= 0)
@@ -118,12 +118,12 @@ public class new_drone : UdonSharpBehaviour
             }
             if (roll != 0)
             {
-                rigid.AddRelativeTorque(-Vector3.forward * (rotateSpeed / 2) * roll * Time.deltaTime, ForceMode.Impulse);
+                rigid.AddRelativeTorque(-Vector3.forward * (rotateSpeed / 2) * roll * Time.fixedDeltaTime, ForceMode.Impulse);
             }
 
             if (pitch != 0)
             {
-                rigid.AddRelativeTorque(Vector3.right * (rotateSpeed / 2) * pitch * Time.deltaTime, ForceMode.Impulse);
+                rigid.AddRelativeTorque(Vector3.right * (rotateSpeed / 2) * pitch * Time.fixedDeltaTime, ForceMode.Impulse);
             }
     }
 
