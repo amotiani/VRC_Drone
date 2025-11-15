@@ -4,7 +4,7 @@ This project contains scripts implementing a physics-based, player-piloted drone
 
 The system is designed to work for both VR and Desktop players, with a focus on customizable "game feel" through exposed UI Sliders for real-time physics tuning.
 
-## 📦 Project Structure
+## Project Structure
 
 This project uses an inheritance model to reduce duplicate code (following the DRY principle).
 
@@ -32,7 +32,7 @@ This project uses an inheritance model to reduce duplicate code (following the D
         * Logic to disable the seat's `BoxCollider` when seated.
         * A `FixedUpdate()` with custom gravity and a simple braking force (`dragValue`) that fights upward momentum.
 
-## ✨ Key Features
+## Key Features
 
 * **Physics-Based Flight**: All movement is handled by a `Rigidbody` for realistic motion.
 * **Dual-Input Support**: Works seamlessly for both Desktop (WASD + Arrow Keys) and VR (Oculus Touch) players.
@@ -47,7 +47,7 @@ This project uses an inheritance model to reduce duplicate code (following the D
 * **Auto-Stabilizer**: The `new_drone` script includes an optional stabilizer to make flight easier.
 * **Clean, Reusable Code**: Inheritance model makes it easy to maintain or create new drone types.
 
-## 💡 Key Logic Explained
+## Logic
 
 * **Input Reading (`BaseDroneController.Update`)**: All player inputs (VR and Desktop) are read every frame in the base class and stored in `protected` variables (like `vrThrottle`, `desktopYaw`, etc.). This keeps all input logic in one place.
  
