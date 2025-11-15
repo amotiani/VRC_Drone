@@ -8,19 +8,17 @@ public class droneMove : base_drone
     [SerializeField] public float dragValue;
     public GameObject _seat;
 
-    // 'override' adds to the parent's Start() method
+    
     public override void Start()
     {
-        base.Start(); // This runs the Start() logic from base_drone
+        base.Start();
         
-        // This logic is unique to droneMove
         seatCollider = _seat.GetComponent<BoxCollider>();
     }
 
-    // 'override' adds to the parent's Update() method
     public override void Update()
     {
-        base.Update(); // This runs all the input, slider, and reset logic
+        base.Update();
         
         if(seated){
             seatCollider.enabled=false;
@@ -35,7 +33,6 @@ public class droneMove : base_drone
         if(seated){
             rb.AddForce(Vector3.down * gScale.magnitude, ForceMode.Acceleration);
 
-            // Input variables from the base class (desktopThrottle)
             bool isThrusting = (vrThrottle > 0) || (desktopThrottle != 0);
 
             if(!isThrusting && rb.velocity.y > 0)
