@@ -35,7 +35,6 @@ public class base_drone : UdonSharpBehaviour
     protected float vrPitch, vrThrottle, vrYaw, vrRoll;
     protected bool resetInput;
 
-    // 'virtual' allows child classes to add to this method
     public virtual void Start()
     {
         seat.disableStationExit = true;
@@ -49,10 +48,9 @@ public class base_drone : UdonSharpBehaviour
         rb.MoveRotation(rotation);
     }
 
-    // 'virtual' allows child classes to override this method
     public virtual void Update()
     {
-        // --- Read All Inputs ---
+        // Read Inputs
         desktopYaw = Input.GetAxis("Horizontal");
         desktopThrottle = Input.GetAxis("Vertical");
         desktopPitch = 0.0f;
