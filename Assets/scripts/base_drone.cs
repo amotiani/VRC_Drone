@@ -48,6 +48,9 @@ public class base_drone : UdonSharpBehaviour
         // Teleport position & Teleport rotation, no LERPing because I use rb.position & rb.rotation here.
         rb.position = position;
         rb.rotation = rotation;
+        // Velocity resets.
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
         rb.isKinematic = false;
     }
 
