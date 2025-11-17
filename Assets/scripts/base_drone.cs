@@ -29,12 +29,12 @@ public class base_drone : UdonSharpBehaviour
     // Reset
     protected Quaternion rotation;
     protected Vector3 position;
-
+    
     // Input Cache (protected so child classes can read them)
     protected float desktopPitch, desktopRoll, desktopYaw, desktopThrottle;
     protected float vrPitch, vrThrottle, vrYaw, vrRoll;
     protected bool resetInput;
-
+    
     public virtual void Start()
     {
         seat.disableStationExit = true;
@@ -44,8 +44,11 @@ public class base_drone : UdonSharpBehaviour
 
     public void ResetPosition()
     {
-        rb.MovePosition(position);
-        rb.MoveRotation(rotation);
+        rb.isKinematic = true;
+        // Teleport position & Teleport rotation, no LERPing because I use rb.position & rb.rotation here.
+        rb.position = position;
+        rb.rotation = rotation;
+        rb.isKinematic = false;
     }
 
     public virtual void Update()
@@ -66,17 +69,17 @@ public class base_drone : UdonSharpBehaviour
         vrRoll = Input.GetAxis("Oculus_CrossPlatform_SecondaryThumbstickHorizontal") * r_slide.value;
         resetInput = Input.GetButtonDown("Oculus_CrossPlatform_PrimaryThumbstick") || Input.GetKeyDown(KeyCode.R);
 
-        if (resetInput)
-        {
-            ResetPosition();
-        }
-
         rb.angularDrag = ad_slide.value;
         rb.mass = m_slide.value;
     }
-
-    // (protected so they can only be called by this class or a child class)
     
+    public  void FixedUpdate(){
+        if(resetInput){
+            ResetPosition();
+        }
+    }
+    
+    // (protected so they can only be called by this class or a child class)
     protected void DesktopControls()
     {
         if (desktopYaw != 0)
